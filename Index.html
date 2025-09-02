@@ -1,0 +1,235 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My Shop</title>
+  <style>
+    :root{
+      --bg:#0b0f14; --panel:#111827; --muted:#6b7280; --text:#e5e7eb; --brand:#22d3ee; --accent:#a78bfa; --ok:#10b981; --danger:#ef4444;
+      --ring: 0 0 0 2px rgba(34,211,238,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,#0b0f14,#0c1320 45%,#0b0f14);color:var(--text);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
+    a{color:inherit}/* Layout */
+header{
+  position:sticky;top:0;z-index:20;
+  backdrop-filter:saturate(160%) blur(10px);
+  background:rgba(17,24,39,.7);
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.container{max-width:1100px;margin:auto;padding:16px}
+.row{display:flex;gap:12px;align-items:center;justify-content:space-between}
+
+/* Search */
+.search{display:flex;align-items:center;gap:8px;flex:1;max-width:520px}
+.search input{
+  flex:1;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.08);
+  background:#0f172a;color:var(--text);
+  outline:none;box-shadow:none
+}
+.search input:focus{box-shadow:var(--ring);border-color:#22d3ee}
+
+/* Buttons */
+.btn{appearance:none;border:0;border-radius:12px;padding:10px 14px;cursor:pointer;font-weight:600}
+.btn-primary{background:linear-gradient(90deg,var(--brand),var(--accent));color:#081018}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,.12)}
+.btn-icon{display:inline-flex;align-items:center;gap:8px}
+
+/* Grid */
+.grid{display:grid;grid-template-columns:repeat(1,minmax(0,1fr));gap:16px}
+@media(min-width:520px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:900px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* Card */
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;min-height:100%}
+.media{aspect-ratio:4/3;display:grid;place-items:center;background:radial-gradient(80% 80% at 50% 20%, rgba(34,211,238,.18), transparent 50%),linear-gradient(180deg,#0f172a,#0b1220);color:#cbd5e1;font-weight:700;font-size:22px}
+.content{padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.price{font-size:18px;font-weight:800}
+.muted{color:var(--muted);font-size:14px}
+
+/* Tags & qty */
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:12px;border:1px solid rgba(255,255,255,.14);padding:4px 8px;border-radius:999px;color:#cbd5e1}
+.qty{display:flex;align-items:center;gap:8px}
+.qty button{width:28px;height:28px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:transparent;color:var(--text);cursor:pointer}
+
+/* Footer bar */
+.bar{position:sticky;bottom:0;background:rgba(17,24,39,.8);backdrop-filter:blur(8px);border-top:1px solid rgba(255,255,255,.06)}
+.bar .row{gap:10px}
+
+/* Cart panel */
+.cart{position:fixed;inset:0 0 0 auto;width:min(420px,95vw);background:#0b1220;border-left:1px solid rgba(255,255,255,.1);transform:translateX(100%);transition:transform .28s ease;z-index:40;display:flex;flex-direction:column}
+.cart.open{transform:translateX(0)}
+.cart header{position:unset;background:transparent;border:0}
+.cart-items{padding:12px;display:flex;flex-direction:column;gap:10px;overflow:auto}
+.cart-item{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:8px}
+.cart-thumb{width:56px;height:42px;border-radius:8px;background:linear-gradient(120deg,rgba(34,211,238,.2),rgba(167,139,250,.2))}
+
+.empty{padding:24px;text-align:center;color:var(--muted)}
+.total{display:flex;align-items:center;justify-content:space-between;padding:16px;border-top:1px dashed rgba(255,255,255,.12)}
+
+.logo{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:.5px}
+.dot{width:10px;height:10px;border-radius:999px;background:linear-gradient(90deg,var(--brand),var(--accent));box-shadow:0 0 24px rgba(34,211,238,.6)}
+
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container row">
+      <div class="logo"><span class="dot"></span> My Shop</div>
+      <div class="search">
+        <input id="q" type="search" placeholder="Search products… (e.g., shoes, bag)" aria-label="Search products" />
+        <button class="btn btn-ghost" id="clearBtn" title="Clear">Clear</button>
+      </div>
+      <button class="btn btn-primary btn-icon" id="openCart" aria-haspopup="dialog" aria-controls="cartPanel">🛒 <span id="cartCount">0</span></button>
+    </div>
+  </header>  <main class="container" id="app" aria-live="polite">
+    <h1 style="font-size:24px;margin:8px 0 12px">Featured Products</h1>
+    <div class="grid" id="grid" role="list"></div>
+  </main>  <div class="bar">
+    <div class="container row">
+      <div class="muted">A basic, single‑file HTML store template.</div>
+      <button class="btn btn-primary" id="checkoutBtn">Checkout</button>
+    </div>
+  </div>  <!-- Cart Panel -->  <aside class="cart" id="cartPanel" role="dialog" aria-modal="true" aria-label="Cart">
+    <header class="container row" style="padding:12px 16px">
+      <div class="logo"><span class="dot"></span> Cart</div>
+      <button class="btn btn-ghost" id="closeCart">Close</button>
+    </header>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="total container">
+      <strong>Total</strong>
+      <div><span id="cartTotal">₹0.00</span></div>
+    </div>
+    <div class="container" style="padding-bottom:16px">
+      <button class="btn btn-primary" style="width:100%" id="payBtn">Pay Now</button>
+    </div>
+  </aside>  <script>
+    // --- Demo data -----------------------------------------------------------
+    const products = [
+      {id:"sneaker-01", name:"Runner Sneaker", price:2499, rating:4.6, tags:["shoes","sport"], desc:"Lightweight everyday runners.", imgText:"Sneakers"},
+      {id:"bag-01", name:"City Backpack", price:1899, rating:4.3, tags:["bag","travel"], desc:"Compact and water‑resistant.", imgText:"Backpack"},
+      {id:"watch-01", name:"Minimal Watch", price:3299, rating:4.8, tags:["watch","accessory"], desc:"Clean dial with date.", imgText:"Watch"},
+      {id:"hoodie-01", name:"Fleece Hoodie", price:1499, rating:4.2, tags:["hoodie","apparel"], desc:"Soft brushed interior.", imgText:"Hoodie"},
+      {id:"bottle-01", name:"Steel Bottle", price:699, rating:4.5, tags:["bottle","outdoor"], desc:"Keeps drinks cold 24h.", imgText:"Bottle"},
+      {id:"buds-01", name:"Wireless Buds", price:2199, rating:4.1, tags:["audio","buds"], desc:"BT 5.3, 24h case.", imgText:"Earbuds"},
+    ];
+
+    // --- State --------------------------------------------------------------
+    const state = { cart: new Map(), query:"" };
+
+    // Helpers
+    const format = n => new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR'}).format(n);
+
+    // --- Render Products ----------------------------------------------------
+    const grid = document.getElementById('grid');
+    function renderProducts(){
+      const q = state.query.trim().toLowerCase();
+      const list = products.filter(p => !q || p.name.toLowerCase().includes(q) || p.tags.some(t=>t.includes(q)));
+      grid.innerHTML = '';
+      if(!list.length){
+        grid.innerHTML = `<div class="card" role="listitem"><div class="content"><strong>No results</strong><p class="muted">Try another search.</p></div></div>`;
+        return;
+      }
+      for(const p of list){
+        const card = document.createElement('article');
+        card.className = 'card'; card.setAttribute('role','listitem');
+        card.innerHTML = `
+          <div class="media">${p.imgText}</div>
+          <div class="content">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+              <h2 style="margin:0;font-size:18px">${p.name}</h2>
+              <div class="price">${format(p.price)}</div>
+            </div>
+            <p class="muted">${p.desc}</p>
+            <div class="tags">${p.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+              <div class="muted">⭐ ${p.rating}</div>
+              <button class="btn btn-primary" data-id="${p.id}">Add to Cart</button>
+            </div>
+          </div>`;
+        grid.appendChild(card);
+      }
+    }
+
+    // --- Cart ---------------------------------------------------------------
+    const cartItems = document.getElementById('cartItems');
+    const cartTotal = document.getElementById('cartTotal');
+    const cartCount = document.getElementById('cartCount');
+
+    function addToCart(id){
+      const p = products.find(x=>x.id===id);
+      const item = state.cart.get(id) || { ...p, qty:0 };
+      item.qty += 1; state.cart.set(id,item);
+      renderCart();
+    }
+    function changeQty(id,delta){
+      const item = state.cart.get(id); if(!item) return;
+      item.qty += delta; if(item.qty<=0) state.cart.delete(id);
+      renderCart();
+    }
+    function renderCart(){
+      if(state.cart.size===0){
+        cartItems.innerHTML = `<div class="empty">Your cart is empty.</div>`;
+      } else {
+        cartItems.innerHTML = '';
+        for(const [id,item] of state.cart){
+          const row = document.createElement('div');
+          row.className = 'cart-item';
+          row.innerHTML = `
+            <div class="cart-thumb" aria-hidden="true"></div>
+            <div>
+              <div style="font-weight:700">${item.name}</div>
+              <div class="muted">${format(item.price)} • ⭐ ${item.rating}</div>
+              <div class="qty" style="margin-top:6px">
+                <button aria-label="Decrease" data-act="dec" data-id="${id}">−</button>
+                <span aria-live="polite">${item.qty}</span>
+                <button aria-label="Increase" data-act="inc" data-id="${id}">+</button>
+                <button class="btn btn-ghost" style="margin-left:auto" data-act="remove" data-id="${id}">Remove</button>
+              </div>
+            </div>
+            <div style="font-weight:800">${format(item.qty*item.price)}</div>`;
+          cartItems.appendChild(row);
+        }
+      }
+      const total = [...state.cart.values()].reduce((s,i)=>s+i.qty*i.price,0);
+      const count = [...state.cart.values()].reduce((s,i)=>s+i.qty,0);
+      cartTotal.textContent = format(total);
+      cartCount.textContent = count;
+    }
+
+    // --- Search -------------------------------------------------------------
+    const qInput = document.getElementById('q');
+    const clearBtn = document.getElementById('clearBtn');
+    qInput.addEventListener('input', e=>{ state.query = e.target.value; renderProducts(); });
+    clearBtn.addEventListener('click', ()=>{ qInput.value=''; state.query=''; renderProducts(); qInput.focus(); });
+
+    // --- Cart open/close ----------------------------------------------------
+    const panel = document.getElementById('cartPanel');
+    document.getElementById('openCart').addEventListener('click', ()=> panel.classList.add('open'));
+    document.getElementById('closeCart').addEventListener('click', ()=> panel.classList.remove('open'));
+
+    // Delegate clicks for Add buttons & cart qty controls
+    document.addEventListener('click', (e)=>{
+      const btn = e.target.closest('button'); if(!btn) return;
+      if(btn.dataset.id && !btn.dataset.act){ addToCart(btn.dataset.id); return; }
+      const act = btn.dataset.act; const id = btn.dataset.id;
+      if(act==='inc') changeQty(id, +1);
+      if(act==='dec') changeQty(id, -1);
+      if(act==='remove'){ state.cart.delete(id); renderCart(); }
+    });
+
+    // --- Checkout demo ------------------------------------------------------
+    document.getElementById('checkoutBtn').addEventListener('click',()=> panel.classList.add('open'));
+    document.getElementById('payBtn').addEventListener('click',()=>{
+      alert('This is a demo. Hook your payment gateway here.');
+    });
+
+    // Init
+    renderProducts();
+    renderCart();
+  </script></body>
+</html>
